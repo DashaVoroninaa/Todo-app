@@ -1,0 +1,23 @@
+.wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+
+.title {
+    color:  #7f7f7f;
+    text-transform: uppercase;
+}
+
+.list {
+    list-style: none;
+}
+
+.button {
+    border: none;
+    border-radius: 8px;
+    padding: 3px;
+    margin-left: 5px;
+    cursor: pointer;
+}
