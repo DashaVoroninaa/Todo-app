@@ -1,42 +1,17 @@
 import React from 'react';
 import { CheckboxGroup } from './common';
 import css from './styles.module.css';
-import { FILTER_STATUSES, filterOptions } from './constants';
+import {filterOptions} from './constants';
+import {connect}  from 'react-redux'
+import {TasksSelectors, TasksActionsCreators} from '../store'
 
-const filterTask = (filter, task) => {
-    if (filter === FILTER_STATUSES.ALL) {
-      return true;
-    };
-
-    if (filter === FILTER_STATUSES.DONE) {
-        return task.isDone
-    }
-
-    return !task.isDone
-};
-
-const generateUniqId = (users) => {
-    const ids = users.map(({ id }) => id);
-  
-    return Math.max(...ids) + 1;
-};
-
-export class App extends React.Component {
+class AppOriginal extends React.Component {
     state = {
-        tasks: [
-            {id: 1, task: 'купить чипсики', isDone: false},
-            {id: 2, task: 'доплести фенечку', isDone: true},
-            {id: 3, task: 'купить виноградную фанту', isDone: true},
-            {id: 4, task: 'съесть сырную лапшу', isDone: false},
-        ],
         task: '',
-        filter: FILTER_STATUSES.ALL,
     };
 
     deleteTaskHandler = (id) => {
-        this.setState((prevState) => ({
-            tasks: prevState.tasks.filter(({id: taskID}) => taskID !== id)
-        }));
+        this.props.deleteTask(id)
     };
 
     inputChangeHanler = (e) => {
@@ -44,31 +19,20 @@ export class App extends React.Component {
     };
 
     addTaskHandler = () => {
-        this.setState((prevState) => ({
-            tasks: prevState.tasks.concat(
-                [{id: generateUniqId(prevState.tasks), task: prevState.taskInput, isDone: false}]
-            )
-        }));
+        this.props.addTask({task: this.state.taskInput, isDone: false})  
     };
 
     toggleCheckbox = (id) => {
-        this.setState((prevState) => ({
-            tasks: prevState.tasks.map((task) => {
-                if (task.id !== id) {
-                    return task
-                }
-
-                return {...task, isDone: !task.isDone}
-            })
-        }))
+        this.props.checkbox(id)
     };
 
     changeFilterHandler = (e) => {
-        this.setState({filter: e.target.value})
+        this.props.filterTask(e.target.value)
     };
 
     render () {
-        const {tasks, taskInput, filter} = this.state;
+        const {taskInput} = this.state;
+        const {tasks, filter} = this.props;
 
         return (
             <div className={css.wrapper}>
@@ -81,7 +45,7 @@ export class App extends React.Component {
                 <CheckboxGroup options={filterOptions} value={filter} onChange={this.changeFilterHandler} />
             </div>
             <ul>
-                {tasks.filter((tasks) => filterTask(filter, tasks)).map(({task, id, isDone}) => (
+                {tasks.map(({task, id, isDone}) => (
                     <li key = {id} className={css.list}>
                         <input type='checkbox' checked = {isDone} onChange={() => {this.toggleCheckbox(id)}} />
                         {task}
@@ -93,3 +57,19 @@ export class App extends React.Component {
         )
     };
 };
+
+const mapStateToProps = (state) => {
+    return {
+        tasks: TasksSelectors.getTasks(state),
+        filter: TasksSelectors.getFilters(state)
+    }
+}
+
+const mapDispatchToProps = {
+    deleteTask: TasksActionsCreators.deleteTask,
+    addTask: TasksActionsCreators.addTask,
+    checkbox: TasksActionsCreators.checkbox,
+    filterTask: TasksActionsCreators.filterTask
+}
+
+export const App = connect(mapStateToProps, mapDispatchToProps)(AppOriginal)
